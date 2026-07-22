@@ -11,14 +11,16 @@ def seed_db():
 
         print("Semeando o cardápio no banco de dados...")
         try:
-            for item in CATALOGO_PADRAO:
-                novo_item = ItemCardapio(**item)
-                db.add(novo_item)
+
+            novos_itens = [ItemCardapio(**item) for item in CATALOGO_PADRAO]
+            db.add_all(novos_itens)
             db.commit()
-            print(f"{len(CATALOGO_PADRAO)} itens inseridos com sucesso!")
+            
+            print(f"{len(novos_itens)} itens inseridos com sucesso!")
         except Exception as e:
             db.rollback()
             print(f"Erro ao semear banco: {e}")
+
 
 if __name__ == "__main__":
     seed_db()
