@@ -1,5 +1,3 @@
-from typing import Optional
-
 from app.dependencies import get_current_user, make_session
 from app.models.models import (
     ItemCardapio,
@@ -37,8 +35,8 @@ async def adicionar_item(
     pedido_id: int,
     item_cardapio_id: int,
     quantidade: int,
-    sabor: Optional[str] = None,
-    tamanho: Optional[str] = None,
+    sabor: str | None = None,
+    tamanho: str | None = None,
     db: Session = Depends(make_session),
     current_user: UserModel = Depends(get_current_user),
 ):

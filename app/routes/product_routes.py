@@ -1,6 +1,5 @@
 import os
 import shutil
-from typing import Optional
 from uuid import uuid4
 
 from app.dependencies import get_current_user, make_session
@@ -15,7 +14,7 @@ UPLOAD_DIR = "static/uploads"
 
 @product_router.get("/")
 async def listar_cardapio(
-    categoria: Optional[CategoriaEnum] = None, db: Session = Depends(make_session)
+    categoria: CategoriaEnum | None = None, db: Session = Depends(make_session)
 ):
     """Lista itens disponíveis no cardápio com filtro opcional."""
     query = db.query(ItemCardapio).filter(ItemCardapio.disponivel)
@@ -31,6 +30,7 @@ async def buscar_item(item_id: int, db: Session = Depends(make_session)):
     if not item:
         raise HTTPException(status_code=404, detail="Item não encontrado.")
     return item
+
 
 @product_router.post("/adicionar", status_code=status.HTTP_201_CREATED)
 async def adicionar_item_cardapio(
@@ -76,9 +76,9 @@ async def adicionar_item_cardapio(
 @product_router.patch("/editar/{item_id}")
 async def editar_item(
     item_id: int,
-    novo_preco: Optional[float] = Form(None),
-    novo_nome: Optional[str] = Form(None),
-    disponibilidade: Optional[bool] = Form(None),
+    novo_preco: float | None = Form(None),
+    novo_nome: str | None = Form(None),
+    disponibilidade: bool | None = Form(None),
     db: Session = Depends(make_session),
     current_user: UserModel = Depends(get_current_user),
 ):

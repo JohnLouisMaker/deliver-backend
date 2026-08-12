@@ -1,10 +1,5 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt
-from sqlalchemy.orm import Session
-
 from app.core.config import (
     ACCESS_TOKEN_EXPIRE,
     ALGORITHM,
@@ -15,6 +10,10 @@ from app.dependencies import get_current_user, make_session, verify_token
 from app.models.models import UserModel
 from app.schemas.schemas import LoginSchema, UserSchema
 from app.security import bcrypt_context
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from jose import jwt
+from sqlalchemy.orm import Session
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 

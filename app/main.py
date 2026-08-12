@@ -28,9 +28,9 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # INCLUINDO ROTAS
-app.include_router(auth_router, prefix="/auth", tags=["auth"])
-app.include_router(order_router, prefix="/pedidos", tags=["orders"])
-app.include_router(product_router, prefix="/cardapio", tags=["cardapio"])
+app.include_router(auth_router)
+app.include_router(order_router)
+app.include_router(product_router)
 
 
 # ROTA RAIZ
