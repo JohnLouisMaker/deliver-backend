@@ -12,6 +12,7 @@ product_router = APIRouter(prefix="/cardapio", tags=["cardapio"])
 UPLOAD_DIR = "static/uploads"
 
 
+@product_router.get("", include_in_schema=False)
 @product_router.get("/")
 async def listar_cardapio(
     categoria: CategoriaEnum | None = None, db: Session = Depends(make_session)
