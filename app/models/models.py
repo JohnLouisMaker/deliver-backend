@@ -26,8 +26,8 @@ engine = create_engine(db_url)
 Base = declarative_base()
 
 
-# ENUM DE CATEGORIAS
-class CategoriaEnum(enum.Enum):
+# ENUM DE CATEGORIAS (Herda de str para facilitar serialização em APIs)
+class CategoriaEnum(str, enum.Enum):
     PIZZA = "Pizza"
     BEBIDA = "Bebida"
     SOBREMESA = "Sobremesa"
@@ -37,7 +37,7 @@ class CategoriaEnum(enum.Enum):
 
 
 # ENUM DE STATUS
-class StatusEnum(enum.Enum):
+class StatusEnum(str, enum.Enum):
     PENDENTE = "Pendente"
     FINALIZADO = "Finalizado"
     CANCELADO = "Cancelado"
@@ -51,9 +51,22 @@ class ItemCardapio(Base):
     nome = Column(String(120), nullable=False, index=True)
     descricao = Column(Text, nullable=True)
     preco = Column(Float, nullable=False)
-    categoria = Column(Enum(CategoriaEnum), nullable=False, index=True)
+
+    # CORREÇÃO: create_type=False e name dentro de Enum()
+    categoria = Column(
+        Enum(
+            CategoriaEnum,
+            name="categoriaenum",
+            create_type=False,
+            values_callable=lambda x: [
+                e.name for e in x
+            ],  # Envia 'PIZZA', 'BEBIDA', etc. para bater com o Supabase
+        ),
+        nullable=False,
+        index=True,
+    )
     disponivel = Column(Boolean, default=True, nullable=False)
-    imagem_url = Column(String(255), nullable=True)  # para mostrar foto no front
+    imagem_url = Column(String(255), nullable=True)
 
 
 # TABELA DE USUÁRIOS
@@ -73,7 +86,18 @@ class PedidoModel(Base):
     __tablename__ = "pedidos"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuario.id"), nullable=False)
-    status = Column(Enum(StatusEnum), nullable=False, default=StatusEnum.PENDENTE)
+
+    # CORREÇÃO: create_type=False e name dentro de Enum()
+    status = Column(
+        Enum(
+            StatusEnum,
+            name="statusenum",
+            create_type=False,
+            values_callable=lambda x: [e.name for e in x],
+        ),
+        nullable=False,
+        default=StatusEnum.PENDENTE,
+    )
     preco = Column(Float, default=0.0, nullable=False)
 
     usuario = relationship("UserModel", back_populates="pedidos")
@@ -92,24 +116,21 @@ class ItemPedidoModel(Base):
     __tablename__ = "itens_pedidos"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
 
-   
-    nome_snapshot = Column(String(100), nullable=False)  
-    preco_unitario = Column(Float, nullable=False)      
-    imagem_url_snapshot = Column(String, nullable=True) 
+    nome_snapshot = Column(String(100), nullable=False)
+    preco_unitario = Column(Float, nullable=False)
+    imagem_url_snapshot = Column(String, nullable=True)
 
     quantidade = Column(Integer, nullable=False)
-    sabor = Column(String(100), nullable=True) 
-    tamanho = Column(String(100), nullable=True) 
-
+    sabor = Column(String(100), nullable=True)
+    tamanho = Column(String(100), nullable=True)
 
     pedido_id = Column(Integer, ForeignKey("pedidos.id"), nullable=False)
     pedido = relationship("PedidoModel", back_populates="itens")
-
 
     item_cardapio_id = Column(Integer, ForeignKey("itens_cardapio.id"), nullable=True)
 
 
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
-    print("Todas as tabelas foram criadas com sucesso!")
-    print("Tabelas criadas: usuario, pedidos, itens_pedidos, itens_cardapio")
+    print("Todas as tabelas foram sincronizadas com sucesso!")
+    print("Tabelas verificadas: usuario, pedidos, itens_pedidos, itens_cardapio")
