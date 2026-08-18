@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from sqlalchemy import (
     Boolean,
     Column,
+    DateTime,
     Enum,
     Float,
     ForeignKey,
@@ -26,7 +27,7 @@ engine = create_engine(db_url)
 Base = declarative_base()
 
 
-# ENUM DE CATEGORIAS (Herda de str para facilitar serialização em APIs)
+# ENUM DE CATEGORIAS
 class CategoriaEnum(str, enum.Enum):
     PIZZA = "Pizza"
     BEBIDA = "Bebida"
@@ -52,15 +53,12 @@ class ItemCardapio(Base):
     descricao = Column(Text, nullable=True)
     preco = Column(Float, nullable=False)
 
-    # CORREÇÃO: create_type=False e name dentro de Enum()
     categoria = Column(
         Enum(
             CategoriaEnum,
             name="categoriaenum",
             create_type=False,
-            values_callable=lambda x: [
-                e.name for e in x
-            ],  # Envia 'PIZZA', 'BEBIDA', etc. para bater com o Supabase
+            values_callable=lambda x: [e.name for e in x],
         ),
         nullable=False,
         index=True,
@@ -78,6 +76,9 @@ class UserModel(Base):
     senha = Column(String(250), nullable=False)
     ativo = Column(Boolean, nullable=False, default=True)
     admin = Column(Boolean, nullable=False, default=False)
+    reset_code_hash = Column(String(64), nullable=True)
+    reset_code_expires_at = Column(DateTime, nullable=True)
+    reset_code_attempts = Column(Integer, default=0)
     pedidos = relationship("PedidoModel", back_populates="usuario")
 
 
@@ -87,7 +88,6 @@ class PedidoModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuario.id"), nullable=False)
 
-    # CORREÇÃO: create_type=False e name dentro de Enum()
     status = Column(
         Enum(
             StatusEnum,
@@ -98,8 +98,8 @@ class PedidoModel(Base):
         nullable=False,
         default=StatusEnum.PENDENTE,
     )
-    preco = Column(Float, default=0.0, nullable=False)
 
+    preco = Column(Float, default=0.0, nullable=False)
     usuario = relationship("UserModel", back_populates="pedidos")
     itens = relationship(
         "ItemPedidoModel", cascade="all, delete-orphan", back_populates="pedido"
@@ -112,6 +112,7 @@ class PedidoModel(Base):
         self.preco -= quantidade * preco_unitario
 
 
+# TABELA DE ITENS DO PEDIDO
 class ItemPedidoModel(Base):
     __tablename__ = "itens_pedidos"
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)

@@ -1,15 +1,14 @@
+from app.core.config import ALGORITHM, SECRET_KEY
+from app.database.database import engine
+from app.models.models import UserModel
+from app.security import oauth2_schema
 from fastapi import Depends, HTTPException
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.core.config import ALGORITHM, SECRET_KEY
-from app.models.models import UserModel
-from app.database.database import engine
-from app.security import oauth2_schema
-
 
 def make_session():
-    try:
+    try: 
         SessionLocal = sessionmaker(bind=engine)
         session = SessionLocal()
         yield session

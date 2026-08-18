@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -8,8 +8,8 @@ class UserSchema(BaseModel):
     nome: str
     email: str
     senha: str
-    ativo: Optional[bool] = True
-    admin: Optional[bool] = False
+    ativo: bool | None = True
+    admin: bool | None = False
 
 
 # --- LOGIN ---
@@ -18,12 +18,23 @@ class LoginSchema(BaseModel):
     senha: str
 
 
+class ForgetPasswordSchema(BaseModel):
+    email: str
+
+
+class ResetPasswordSchema(BaseModel):
+    email: str
+    code: str
+    reset_token: str
+    new_password: str
+
+
 # --- ITENS DE PEDIDO ---
 class ItemPedidoSchema(BaseModel):
     item_id: int
     quantidade: int
-    sabor: Optional[str] = None 
-    tamanho: Optional[str] = None 
+    sabor: str | None = None
+    tamanho: str | None = None
 
 
 class ItemPedidoSchemaResponse(BaseModel):
@@ -32,7 +43,7 @@ class ItemPedidoSchemaResponse(BaseModel):
     quantidade: int
     sabor: str
     tamanho: str
-    preco_unitario: float  
+    preco_unitario: float
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -49,13 +60,14 @@ class PedidoSchemaResponse(BaseModel):
     usuario_id: int
     status: StatusSchema
     preco: float  # Preço total do pedido
-    itens: List[ItemPedidoSchemaResponse] = []
+    itens: list[ItemPedidoSchemaResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
+
 
 # --- CARDÁPIO --
 class ItemCardapioCreate(BaseModel):
     nome: str
-    descricao: Optional[str] = None
+    descricao: str | None = None
     preco: float
     categoria: str
