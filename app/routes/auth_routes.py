@@ -46,7 +46,7 @@ auth_router = APIRouter(prefix="/auth", tags=["Autenticação"])
 def create_token(id: int, token_type: str, duration: timedelta):
     expire = datetime.now(timezone.utc) + duration
     payload = {
-        "sub": id,
+        "sub": str(id),
         "type": token_type,
         "exp": expire,
     }
@@ -217,7 +217,7 @@ async def reset_password(
             raise HTTPException(
                 status_code=400, detail="Token inválido para redefinição."
             )
-        if payload.get("sub") != user.id:
+        if payload.get("sub") != str(user.id):
             raise HTTPException(
                 status_code=400, detail="Token não corresponde a este usuário."
             )
@@ -260,10 +260,14 @@ async def refresh_token(
 ):
 
     token_type = data.get("type")
-    user_id = data.get("sub")
 
     if not token_type == "refresh":
         raise HTTPException(status_code=401, detail="Token de refresh exigido.")
+
+    try:
+        user_id = int(data["sub"])
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Token inválido.")
 
     user = db.query(UserModel).filter(UserModel.id == user_id).first()
     if not user:

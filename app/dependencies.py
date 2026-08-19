@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 
 def make_session():
-    try: 
+    try:
         SessionLocal = sessionmaker(bind=engine)
         session = SessionLocal()
         yield session
@@ -30,7 +30,12 @@ def get_current_user(
     if payload.get("type") != "access":
         raise HTTPException(status_code=401, detail="Token de acesso exigido.")
 
-    user = session.query(UserModel).filter(UserModel.id == payload.get("sub")).first()
+    try:
+        user_id = int(payload["sub"])
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(status_code=401, detail="Token inválido.")
+
+    user = session.query(UserModel).filter(UserModel.id == user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="Usuário não encontrado.")
     return user
