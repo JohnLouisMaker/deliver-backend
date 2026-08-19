@@ -134,7 +134,7 @@ async def loginform(
 
 
 # CADASTRO
-@auth_router.post("/register")
+@auth_router.post("/signup")
 async def register(schema: UserSchema, db: Session = Depends(make_session)):
     existing_user = db.query(UserModel).filter(UserModel.email == schema.email).first()
     if existing_user:
