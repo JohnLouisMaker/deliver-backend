@@ -29,6 +29,12 @@ class ResetPasswordSchema(BaseModel):
     new_password: str
 
 
+class VerifyResetCodeSchema(BaseModel):
+    email: str
+    code: str
+    reset_token: str
+
+
 # --- ITENS DE PEDIDO ---
 class ItemPedidoSchema(BaseModel):
     item_id: int

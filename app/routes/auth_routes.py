@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import random
 from datetime import datetime, timedelta, timezone
 
@@ -20,6 +21,7 @@ from app.schemas.schemas import (
     LoginSchema,
     ResetPasswordSchema,
     UserSchema,
+    VerifyResetCodeSchema,
 )
 from app.security import bcrypt_context
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -32,14 +34,15 @@ mail_config = ConnectionConfig(
     MAIL_USERNAME=EMAIL_USER,
     MAIL_PASSWORD=EMAIL_PASSWORD,
     MAIL_FROM=EMAIL_FROM,
-    MAIL_PORT=EMAIL_PORT,
+    MAIL_PORT=int(EMAIL_PORT),
     MAIL_SERVER=EMAIL_HOST,
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,
     USE_CREDENTIALS=True,
+    VALIDATE_CERTS=True,
 )
-
 auth_router = APIRouter(prefix="/auth", tags=["Autenticação"])
+logger = logging.getLogger(__name__)
 
 
 # CRIAÇÃO DE TOKEN
@@ -77,6 +80,7 @@ def authenticate(username: str, password: str, db: Session):
         return None
     if not user.ativo:
         return None
+
     return user
 
 
@@ -90,7 +94,18 @@ async def send_reset_code_email(destinatario: str, codigo: str):
     )
 
     fm = FastMail(mail_config)
-    await fm.send_message(mensagem)
+    try:
+        await fm.send_message(mensagem)
+        print(f"E-mail enviado com sucesso para: {destinatario}")
+    except Exception as e:
+        print(f"Erro ao disparar e-mail de recuperação: {e}")
+
+
+async def send_reset_code_email_safe(destinatario: str, codigo: str):
+    try:
+        await send_reset_code_email(destinatario, codigo)
+    except Exception:
+        logger.exception("Falha ao enviar código de recuperação para %s", destinatario)
 
 
 # FUNÇÃO PARA HASH DO CÓDIGO (SHA-256)
@@ -161,8 +176,9 @@ async def register(schema: UserSchema, db: Session = Depends(make_session)):
     }
 
 
-# ESQUECEU SENHA
+# INICIO DO FLUXO DE RECUPERAÇÃO DE SENHA
 @auth_router.post("/forgot-password")
+@auth_router.post("/forgot_password", include_in_schema=False)
 async def forgotpassword(
     schema: ForgetPasswordSchema,
     background_tasks: BackgroundTasks,
@@ -174,7 +190,7 @@ async def forgotpassword(
             status_code=404, detail="Email informado não está cadastrado"
         )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
 
     if user.reset_code_expires_at and user.reset_code_expires_at > (
         now + timedelta(minutes=14)
@@ -189,7 +205,7 @@ async def forgotpassword(
     user.reset_code_expires_at = now + timedelta(minutes=15)
     user.reset_code_attempts = 0
 
-    background_tasks.add_task(send_reset_code_email, user.email, codigo)
+    background_tasks.add_task(send_reset_code_email_safe, user.email, codigo)
 
     reset_token = create_token(
         id=user.id, token_type="reset", duration=timedelta(minutes=15)
@@ -202,7 +218,49 @@ async def forgotpassword(
     }
 
 
-# REDEFINIR SENHA
+# VALIDAÇÃO DO CÓDIGO DE RECUPERAÇÃO
+@auth_router.post("/verify-reset-code")
+async def verify_reset_code(
+    schema: VerifyResetCodeSchema, db: Session = Depends(make_session)
+):
+    user = db.query(UserModel).filter(UserModel.email == schema.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    try:
+        payload = jwt.decode(schema.reset_token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "reset":
+            raise HTTPException(
+                status_code=400, detail="Token inválido para redefinição."
+            )
+        if payload.get("sub") != str(user.id):
+            raise HTTPException(
+                status_code=400, detail="Token não corresponde a este usuário."
+            )
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=400, detail="Token de redefinição expirado.")
+    except jwt.JWTError:
+        raise HTTPException(status_code=400, detail="Token de redefinição inválido.")
+
+    if not user.reset_code_hash or not user.reset_code_expires_at:
+        raise HTTPException(
+            status_code=400, detail="Nenhum código de recuperação ativo."
+        )
+    if user.reset_code_expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
+        raise HTTPException(status_code=400, detail="Código de recuperação expirado.")
+    if (user.reset_code_attempts or 0) >= 5:
+        raise HTTPException(
+            status_code=429, detail="Muitas tentativas. Solicite um novo código."
+        )
+    if user.reset_code_hash != hash_code(schema.code):
+        user.reset_code_attempts = (user.reset_code_attempts or 0) + 1
+        db.commit()
+        raise HTTPException(status_code=400, detail="Código de recuperação inválido.")
+
+    return {"message": "Código verificado com sucesso."}
+
+
+# ALTERA A SENHA DO USUÁRIO
 @auth_router.post("/reset-password")
 async def reset_password(
     schema: ResetPasswordSchema, db: Session = Depends(make_session)
@@ -226,11 +284,12 @@ async def reset_password(
     except jwt.JWTError:
         raise HTTPException(status_code=400, detail="Token de redefinição inválido.")
 
-        if not user.reset_code_hash or not user.reset_code_expires_at:
-            raise HTTPException(
-                status_code=400, detail="Nenhum código de recuperação ativo."
-            )
-    if user.reset_code_expires_at < datetime.now(timezone.utc):
+    if not user.reset_code_hash or not user.reset_code_expires_at:
+        raise HTTPException(
+            status_code=400, detail="Nenhum código de recuperação ativo."
+        )
+
+    if user.reset_code_expires_at < datetime.now(timezone.utc).replace(tzinfo=None):
         raise HTTPException(status_code=400, detail="Código de recuperação expirado.")
 
     if user.reset_code_attempts >= 5:
