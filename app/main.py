@@ -34,6 +34,6 @@ app.include_router(product_router)
 
 
 # ROTA RAIZ
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
     return {"message": "API Python com FastAPI!"}
