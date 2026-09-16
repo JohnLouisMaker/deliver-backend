@@ -1,7 +1,6 @@
 import enum
-import os
 
-from dotenv import load_dotenv
+from app.database.database import Base, engine
 from sqlalchemy import (
     Boolean,
     Column,
@@ -12,19 +11,8 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    create_engine,
 )
-from sqlalchemy.orm import declarative_base, relationship
-
-load_dotenv()
-
-db_url = os.getenv("DATABASE_URL")
-
-if not db_url:
-    raise ValueError("A variável DATABASE_URL não foi encontrada no arquivo .env")
-
-engine = create_engine(db_url)
-Base = declarative_base()
+from sqlalchemy.orm import relationship
 
 
 # ENUM DE CATEGORIAS
@@ -101,9 +89,7 @@ class PedidoModel(Base):
 
     preco = Column(Float, default=0.0, nullable=False)
     usuario = relationship("UserModel", back_populates="pedidos")
-    itens = relationship(
-        "ItemPedidoModel", cascade="all, delete-orphan", back_populates="pedido"
-    )
+    itens = relationship("ItemPedidoModel", cascade="all, delete-orphan", back_populates="pedido")
 
     def adicionar_item_do_total(self, quantidade, preco_unitario):
         self.preco += quantidade * preco_unitario
