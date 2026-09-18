@@ -12,6 +12,13 @@ class UserSchema(BaseModel):
     admin: bool | None = False
 
 
+# --- USUÁRIO SIGNUP ---
+class UserSignUpSchema(BaseModel):
+    nome: str
+    email: str
+    senha: str
+
+
 # --- LOGIN ---
 class LoginSchema(BaseModel):
     email: str
