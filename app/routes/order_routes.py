@@ -6,7 +6,7 @@ from app.models.models import (
     StatusEnum,
     UserModel,
 )
-from app.schemas.schemas import FinalizarPedidoSchema
+from app.schemas.schemas import FinalizarPedidoSchema, PedidoSchemaResponse
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
@@ -131,7 +131,7 @@ async def finalizar_pedido(
     return {"message": "Pedido enviado para a cozinha!", "pedido_id": pedido.id}
 
 
-@order_router.get("/meus_pedidos")
+@order_router.get("/meus_pedidos", response_model=list[PedidoSchemaResponse])
 async def listar_meus_pedidos(
     db: Session = Depends(make_session),
     current_user: UserModel = Depends(get_current_user),
@@ -142,3 +142,21 @@ async def listar_meus_pedidos(
         .filter(PedidoModel.usuario_id == current_user.id)
         .all()
     )
+
+
+@order_router.get("/{pedido_id}", response_model=PedidoSchemaResponse)
+async def detalhe_pedido(
+    pedido_id: int,
+    db: Session = Depends(make_session),
+    current_user: UserModel = Depends(get_current_user),
+):
+    pedido = (
+        db.query(PedidoModel)
+        .options(joinedload(PedidoModel.itens))
+        .filter(PedidoModel.id == pedido_id)
+        .first()
+    )
+    if not pedido:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado.")
+    verificar_permissao_pedido(pedido, current_user)
+    return pedido
