@@ -1,5 +1,6 @@
 from enum import Enum
 
+from app.models.models import FormaPagamentoEnum
 from pydantic import BaseModel, ConfigDict
 
 
@@ -72,10 +73,24 @@ class PedidoSchemaResponse(BaseModel):
     id: int
     usuario_id: int
     status: StatusSchema
-    preco: float  # Preço total do pedido
+    preco: float
+    endereco_entrega: str | None = None
+    forma_pagamento: FormaPagamentoEnum | None = None
+    troco_para: float | None = None
+    observacao: str | None = None
+    telefone_contato: str | None = None
+    created_at: str | None = None
     itens: list[ItemPedidoSchemaResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class FinalizarPedidoSchema(BaseModel):
+    endereco_entrega: str
+    forma_pagamento: FormaPagamentoEnum
+    troco_para: float | None = None
+    observacao: str | None = None
+    telefone_contato: str | None = None
 
 
 # --- CARDÁPIO --
