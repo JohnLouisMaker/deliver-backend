@@ -6,6 +6,7 @@ from app.models.models import (
     StatusEnum,
     UserModel,
 )
+from app.schemas.schemas import FinalizarPedidoSchema
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 
@@ -55,9 +56,7 @@ async def adicionar_item(
     # BUSCA O PREÇO REAL NO CARDÁPIO (SEGURANÇA TOTAL)
     produto = db.query(ItemCardapio).filter(ItemCardapio.id == item_cardapio_id).first()
     if not produto or not produto.disponivel:
-        raise HTTPException(
-            status_code=404, detail="Produto não disponível no cardápio."
-        )
+        raise HTTPException(status_code=404, detail="Produto não disponível no cardápio.")
 
     new_item = ItemPedidoModel(
         pedido_id=pedido_id,
@@ -87,9 +86,7 @@ async def remover_item(
     verificar_permissao_pedido(pedido, current_user)
 
     item = (
-        db.query(ItemPedidoModel)
-        .filter(ItemPedidoModel.id == item_id, ItemPedidoModel.pedido_id == pedido_id)
-        .first()
+        db.query(ItemPedidoModel).filter(ItemPedidoModel.id == item_id, ItemPedidoModel.pedido_id == pedido_id).first()
     )
 
     if not item:
@@ -104,15 +101,34 @@ async def remover_item(
 @order_router.post("/finalizar/{pedido_id}")
 async def finalizar_pedido(
     pedido_id: int,
+    dados: FinalizarPedidoSchema,
     db: Session = Depends(make_session),
     current_user: UserModel = Depends(get_current_user),
 ):
     pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado.")
     verificar_permissao_pedido(pedido, current_user)
 
+    if pedido.status != StatusEnum.PENDENTE:
+        raise HTTPException(
+            status_code=400,
+            detail="Este pedido já foi finalizado ou cancelado.",
+        )
+    if not pedido.itens:
+        raise HTTPException(
+            status_code=400,
+            detail="Pedido vazio. Adicione itens antes de finalizar.",
+        )
+
+    pedido.endereco_entrega = dados.endereco_entrega
+    pedido.forma_pagamento = dados.forma_pagamento
+    pedido.troco_para = dados.troco_para
+    pedido.observacao = dados.observacao
+    pedido.telefone_contato = dados.telefone_contato
     pedido.status = StatusEnum.FINALIZADO
     db.commit()
-    return {"message": "Pedido enviado para a cozinha!"}
+    return {"message": "Pedido enviado para a cozinha!", "pedido_id": pedido.id}
 
 
 @order_router.get("/meus_pedidos")

@@ -1,4 +1,5 @@
 import enum
+from datetime import datetime, timezone
 
 from app.database.database import Base, engine
 from sqlalchemy import (
@@ -30,6 +31,15 @@ class StatusEnum(str, enum.Enum):
     PENDENTE = "Pendente"
     FINALIZADO = "Finalizado"
     CANCELADO = "Cancelado"
+
+
+# ENUM DE FORMA DE PAGAMENTO
+class FormaPagamentoEnum(str, enum.Enum):
+    DINHEIRO = "Dinheiro"
+    CARTAO_CREDITO = "Cartão de Crédito"
+    CARTAO_DEBITO = "Cartão de Débito"
+    PIX = "Pix"
+    VALE_ALIMENTACAO = "Vale Alimentação"
 
 
 # TABELA DE ITENS DO CARDÁPIO
@@ -88,6 +98,23 @@ class PedidoModel(Base):
     )
 
     preco = Column(Float, default=0.0, nullable=False)
+
+    # Checkout fields
+    endereco_entrega = Column(Text, nullable=True)
+    forma_pagamento = Column(
+        Enum(
+            FormaPagamentoEnum,
+            name="formapagamentoenum",
+            create_type=False,
+            values_callable=lambda x: [e.name for e in x],
+        ),
+        nullable=True,
+    )
+    troco_para = Column(Float, nullable=True)
+    observacao = Column(Text, nullable=True)
+    telefone_contato = Column(String(20), nullable=True)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
+
     usuario = relationship("UserModel", back_populates="pedidos")
     itens = relationship("ItemPedidoModel", cascade="all, delete-orphan", back_populates="pedido")
 
