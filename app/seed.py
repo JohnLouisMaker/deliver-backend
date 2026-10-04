@@ -1,6 +1,104 @@
 from app.database.database import SessionLocal, engine
-from app.database.product import CATALOGO_PADRAO
-from app.models.models import Base, ItemCardapio
+from app.models.models import Base, CategoriaEnum, ItemCardapio
+
+CATALOGO_PADRAO = [
+    {
+        "nome": "Marguerita Clássica",
+        "descricao": "Molho de tomate pelati, muçarela fresca, manjericão e azeite extra virgem.",
+        "categoria": CategoriaEnum.PIZZA,
+        "preco": 54.9,
+        "imagem_url": "/static/uploads/marguerita-caseira.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Pepperoni Toscana",
+        "descricao": "Borda fina, pepperoni curado, queijo meia-cura e orégano tostado.",
+        "categoria": CategoriaEnum.PIZZA,
+        "preco": 62.5,
+        "imagem_url": "/static/uploads/pepperoni-toscana.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "4 Queijos Cremosa",
+        "descricao": "Muçarela, gorgonzola, parmesão e catupiry gratinado.",
+        "categoria": CategoriaEnum.PIZZA,
+        "preco": 57.0,
+        "imagem_url": "/static/uploads/pizza4queijo.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Frango Barbecue",
+        "descricao": "Frango desfiado, molho barbecue artesanal, bacon crocante e cebola roxa.",
+        "categoria": CategoriaEnum.PIZZA,
+        "preco": 59.9,
+        "imagem_url": "/static/uploads/frango-barbecue.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Veggie Mediterrânea",
+        "descricao": "Abobrinha grelhada, tomate confit, azeitona kalamata e queijo de cabra.",
+        "categoria": CategoriaEnum.PIZZA,
+        "preco": 52.0,
+        "imagem_url": "/static/uploads/veggie-med.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Trufa Negra",
+        "descricao": "Base bianca com creme de trufas, cogumelos salteados e queijo de cabra.",
+        "categoria": CategoriaEnum.PIZZA,
+        "preco": 68.0,
+        "imagem_url": "/static/uploads/trufa-negra.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Pesto e Tomate",
+        "descricao": "Massa artesanal, burrata cremosa, pesto de manjericão e tomate confit.",
+        "categoria": CategoriaEnum.ACOMPANHAMENTO,
+        "preco": 44.0,
+        "imagem_url": "/static/uploads/pesto-tomate.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Bruschetta Mediterrânea",
+        "descricao": "Pão rústico, tomate sweet grape, azeite, manjericão e parmesão.",
+        "categoria": CategoriaEnum.ACOMPANHAMENTO,
+        "preco": 32.0,
+        "imagem_url": "/static/uploads/bruschetta-mediterranea.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Brownie Belga",
+        "descricao": "Brownie quente com calda de chocolate belga e sorvete de creme.",
+        "categoria": CategoriaEnum.SOBREMESA,
+        "preco": 22.5,
+        "imagem_url": "/static/uploads/brownie-belga.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Cheesecake de Frutas Vermelhas",
+        "descricao": "Base crocante com creme de queijo e coulis de frutas vermelhas.",
+        "categoria": CategoriaEnum.SOBREMESA,
+        "preco": 24.0,
+        "imagem_url": "/static/uploads/cheesecake-de-frutas-vermelhas.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Refrigerante Lata",
+        "descricao": "350ml - Coca-Cola, Guaraná ou Sprite geladinha.",
+        "categoria": CategoriaEnum.BEBIDA,
+        "preco": 7.5,
+        "imagem_url": "/static/uploads/refrigerante-lata.jpg",
+        "disponivel": True,
+    },
+    {
+        "nome": "Suco Natural",
+        "descricao": "Laranja, limonada suíça ou abacaxi com hortelã, feito na hora.",
+        "categoria": CategoriaEnum.BEBIDA,
+        "preco": 12.0,
+        "imagem_url": "/static/uploads/suco-natural.jpg",
+        "disponivel": True,
+    },
+]
 
 
 def seed_db():

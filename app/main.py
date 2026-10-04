@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI(title="API Python com FastAPI")
+fastapi_app = FastAPI(title="API Python com FastAPI")
 
 # Lista de origens fixas (como localhost)
 origins = [
@@ -15,25 +15,24 @@ origins = [
     "https://deliver-frontend-three.vercel.app",
 ]
 
-# CONFIG CORS MIDDLEWARE
-app.add_middleware(
-    CORSMiddleware,
+fastapi_app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# INCLUINDO ROTAS
+fastapi_app.include_router(auth_router)
+fastapi_app.include_router(order_router)
+fastapi_app.include_router(product_router)
+
+
+# ROTA RAIZ
+@fastapi_app.api_route("/", methods=["GET", "HEAD"])
+async def root():
+    return {"message": "API Python com FastAPI!"}
+
+app = CORSMiddleware(
+    app=fastapi_app,
     allow_origins=origins,
     allow_origin_regex=r"https://deliver-frontend-.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# INCLUINDO ROTAS
-app.include_router(auth_router)
-app.include_router(order_router)
-app.include_router(product_router)
-
-
-# ROTA RAIZ
-@app.api_route("/", methods=["GET", "HEAD"])
-async def root():
-    return {"message": "API Python com FastAPI!"}
