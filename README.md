@@ -228,7 +228,3 @@ alembic upgrade head
 # Reverter última migration
 alembic downgrade -1
 ```
-
-## Licença
-
-Este projeto está sob a licença MIT.
