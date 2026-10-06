@@ -20,25 +20,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("""
-        DO $
-        BEGIN
-            IF NOT EXISTS (
-                SELECT 1
-                FROM pg_type
-                WHERE typname = 'formapagamentoenum'
-            ) THEN
-                CREATE TYPE formapagamentoenum AS ENUM (
-                    'DINHEIRO',
-                    'CARTAO_CREDITO',
-                    'CARTAO_DEBITO',
-                    'PIX',
-                    'VALE_ALIMENTACAO'
-                );
-            END IF;
-        END
-        $;
-    """)
+    forma_pagamento_enum = sa.Enum(
+        "DINHEIRO",
+        "CARTAO_CREDITO",
+        "CARTAO_DEBITO",
+        "PIX",
+        "VALE_ALIMENTACAO",
+        name="formapagamentoenum",
+    )
+
+    forma_pagamento_enum.create(op.get_bind(), checkfirst=True)
 
     op.add_column("pedidos", sa.Column("endereco_entrega", sa.Text(), nullable=True))
     op.add_column(
