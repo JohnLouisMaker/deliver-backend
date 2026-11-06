@@ -20,6 +20,12 @@ class UserSignUpSchema(BaseModel):
     senha: str
 
 
+# --- ATUALIZAÇÃO DE USUÁRIO ---
+class UserUpdateSchema(BaseModel):
+    nome: str | None = None
+    email: str | None = None
+
+
 # --- LOGIN ---
 class LoginSchema(BaseModel):
     email: str
