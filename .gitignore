@@ -37,3 +37,18 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# --- Node / artefatos JS auxiliares ---
+node_modules/
+.npm/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Caches de ferramentas ---
+.ruff_cache/
+.coverage.*
+coverage.xml
+
