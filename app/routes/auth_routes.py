@@ -21,6 +21,7 @@ from app.schemas.schemas import (
     LoginSchema,
     ResetPasswordSchema,
     UserSignUpSchema,
+    UserUpdateSchema,
     VerifyResetCodeSchema,
 )
 from app.security import bcrypt_context
@@ -311,6 +312,36 @@ async def refresh_token(data: dict = Depends(verify_token), db: Session = Depend
 # MEUS DADOS
 @auth_router.get("/me")
 async def me(user: UserModel = Depends(get_current_user)):
+    return {
+        "id": user.id,
+        "nome": user.nome,
+        "email": user.email,
+        "admin": user.admin,
+        "ativo": user.ativo,
+    }
+
+
+# ATUALIZAÇÃO DE DADOS DO USUÁRIO
+@auth_router.patch("/me")
+async def update_me(
+    schema: UserUpdateSchema,
+    user: UserModel = Depends(get_current_user),
+    db: Session = Depends(make_session),
+):
+    if schema.email is not None:
+        email_existente = db.query(UserModel).filter(UserModel.email == schema.email, UserModel.id != user.id).first()
+
+        if email_existente:
+            raise HTTPException(status_code=400, detail="Este e-mail já está cadastrado.")
+
+        user.email = schema.email
+
+    if schema.nome is not None:
+        user.nome = schema.nome
+
+    db.commit()
+    db.refresh(user)
+
     return {
         "id": user.id,
         "nome": user.nome,
