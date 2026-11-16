@@ -11,6 +11,30 @@ product_router = APIRouter(prefix="/cardapio", tags=["cardapio"])
 
 UPLOAD_DIR = "static/uploads"
 
+ORDEM_TAMANHOS = {"pequena": 0, "media": 1, "grande": 2}
+
+
+def serializar_item_cardapio(item: ItemCardapio) -> dict:
+    """Item do cardápio com preços por tamanho quando existirem."""
+    dados = {
+        "id": item.id,
+        "nome": item.nome,
+        "descricao": item.descricao,
+        "preco": item.preco,
+        "categoria": item.categoria,
+        "disponivel": item.disponivel,
+        "imagem_url": item.imagem_url,
+    }
+    if item.precos_tamanho:
+        dados["precos_por_tamanho"] = [
+            {"tamanho": preco.tamanho, "preco": float(preco.preco)}
+            for preco in sorted(
+                item.precos_tamanho,
+                key=lambda p: ORDEM_TAMANHOS.get(p.tamanho, 99),
+            )
+        ]
+    return dados
+
 
 @product_router.get("", include_in_schema=False)
 @product_router.get("/")
@@ -21,7 +45,7 @@ async def listar_cardapio(
     query = db.query(ItemCardapio).filter(ItemCardapio.disponivel)
     if categoria:
         query = query.filter(ItemCardapio.categoria == categoria)
-    return query.all()
+    return [serializar_item_cardapio(item) for item in query.all()]
 
 
 @product_router.get("/{item_id}")
@@ -30,7 +54,7 @@ async def buscar_item(item_id: int, db: Session = Depends(make_session)):
     item = db.query(ItemCardapio).filter(ItemCardapio.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item não encontrado.")
-    return item
+    return serializar_item_cardapio(item)
 
 
 @product_router.post("/adicionar", status_code=status.HTTP_201_CREATED)

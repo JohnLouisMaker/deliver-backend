@@ -4,14 +4,17 @@ from datetime import datetime, timezone
 from app.database.database import Base, engine
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
     DateTime,
     Enum,
     Float,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -42,6 +45,13 @@ class FormaPagamentoEnum(str, enum.Enum):
     VALE_ALIMENTACAO = "Vale Alimentação"
 
 
+# ENUM DE TAMANHOS DE PIZZA
+class TamanhoEnum(str, enum.Enum):
+    PEQUENA = "pequena"
+    MEDIA = "media"
+    GRANDE = "grande"
+
+
 # TABELA DE ITENS DO CARDÁPIO
 class ItemCardapio(Base):
     __tablename__ = "itens_cardapio"
@@ -63,6 +73,63 @@ class ItemCardapio(Base):
     )
     disponivel = Column(Boolean, default=True, nullable=False)
     imagem_url = Column(String(255), nullable=True)
+
+    precos_tamanho = relationship(
+        "ItemTamanhoPreco",
+        back_populates="item_cardapio",
+        cascade="all, delete-orphan",
+    )
+
+    def preco_para_tamanho(self, tamanho):
+        """Preço oficial da combinação sabor/tamanho.
+
+        Levanta erro explícito quando a combinação não está configurada, em vez
+        de recair em preço padrão ou multiplicador presumido.
+        """
+        tamanho_valor = (
+            tamanho.value if isinstance(tamanho, TamanhoEnum) else str(tamanho)
+        )
+        for preco_tamanho in self.precos_tamanho:
+            if preco_tamanho.tamanho == tamanho_valor:
+                return preco_tamanho.preco
+        raise ValueError(
+            f"Preço não configurado para o item {self.id} no tamanho "
+            f"'{tamanho_valor}'."
+        )
+
+
+# TABELA DE PREÇOS POR TAMANHO (PIZZA = SABOR x TAMANHO)
+class ItemTamanhoPreco(Base):
+    """Preço próprio de cada combinação sabor do cardápio x tamanho."""
+
+    __tablename__ = "itens_cardapio_precos_tamanho"
+    __table_args__ = (
+        UniqueConstraint(
+            "item_cardapio_id",
+            "tamanho",
+            name="uq_itens_cardapio_precos_tamanho_item_tamanho",
+        ),
+        CheckConstraint(
+            "tamanho IN ('pequena', 'media', 'grande')",
+            name="ck_itens_cardapio_precos_tamanho_tamanho_valido",
+        ),
+        CheckConstraint(
+            "preco > 0",
+            name="ck_itens_cardapio_precos_tamanho_preco_positivo",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    item_cardapio_id = Column(
+        Integer,
+        ForeignKey("itens_cardapio.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    tamanho = Column(String(10), nullable=False)
+    preco = Column(Numeric(10, 2), nullable=False)
+
+    item_cardapio = relationship("ItemCardapio", back_populates="precos_tamanho")
 
 
 # TABELA DE USUÁRIOS
@@ -147,4 +214,4 @@ class ItemPedidoModel(Base):
 if __name__ == "__main__":
     Base.metadata.create_all(bind=engine)
     print("Todas as tabelas foram sincronizadas com sucesso!")
-    print("Tabelas verificadas: usuario, pedidos, itens_pedidos, itens_cardapio")
+    print("Tabelas verificadas: usuario, pedidos, itens_pedidos, itens_cardapio, itens_cardapio_precos_tamanho")

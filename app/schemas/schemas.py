@@ -1,7 +1,7 @@
 from enum import Enum
 
-from app.models.models import FormaPagamentoEnum
-from pydantic import BaseModel, ConfigDict
+from app.models.models import FormaPagamentoEnum, TamanhoEnum
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # --- USUÁRIO ---
@@ -51,10 +51,29 @@ class VerifyResetCodeSchema(BaseModel):
 
 # --- ITENS DE PEDIDO ---
 class ItemPedidoSchema(BaseModel):
-    item_id: int
-    quantidade: int
-    sabor: str | None = None
-    tamanho: str | None = None
+    item_cardapio_id: int
+    quantidade: int = Field(gt=0)
+    tamanho: TamanhoEnum | None = None
+
+
+# --- CHECKOUT (CARRINHO INTEIRO EM UMA UNICA OPERACAO) ---
+class FormaPagamentoSchema(str, Enum):
+    """Valores aceitos no JSON: nomes do enum persistido no banco."""
+
+    DINHEIRO = "DINHEIRO"
+    CARTAO_CREDITO = "CARTAO_CREDITO"
+    CARTAO_DEBITO = "CARTAO_DEBITO"
+    PIX = "PIX"
+    VALE_ALIMENTACAO = "VALE_ALIMENTACAO"
+
+
+class CheckoutSchema(BaseModel):
+    itens: list[ItemPedidoSchema] = Field(min_length=1)
+    endereco_entrega: str = Field(min_length=1, max_length=500)
+    forma_pagamento: FormaPagamentoSchema
+    telefone_contato: str = Field(min_length=1, max_length=20)
+    troco_para: float | None = Field(default=None, ge=0)
+    observacao: str | None = None
 
 
 class ItemPedidoSchemaResponse(BaseModel):
@@ -73,6 +92,26 @@ class StatusSchema(str, Enum):
     FINALIZADO = "FINALIZADO"
     PENDENTE = "PENDENTE"
     CANCELADO = "CANCELADO"
+
+
+# --- RESPOSTA DO CHECKOUT ---
+class ItemCheckoutResponse(BaseModel):
+    item_cardapio_id: int
+    nome_snapshot: str
+    tamanho: str | None = None
+    quantidade: int
+    preco_unitario: float
+
+
+class PedidoCheckoutResponse(BaseModel):
+    id: int
+    status: StatusSchema
+    itens: list[ItemCheckoutResponse]
+    total: float
+
+
+class CheckoutResponse(BaseModel):
+    pedido: PedidoCheckoutResponse
 
 
 class PedidoSchemaResponse(BaseModel):
