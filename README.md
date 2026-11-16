@@ -142,6 +142,8 @@ A API usa **JWT** com três tipos de token (campo `type` no payload): `access`, 
 Todas as rotas protegidas exigem o header:
 `Authorization: Bearer <access_token>`
 
+O **refresh token também é enviado no header** `Authorization: Bearer <refresh_token>` na rota `POST /auth/refresh` (não há refresh token no corpo). Quando o access token expira, a API responde `401`; o cliente deve renovar com esse header e repetir a requisição.
+
 ## Endpoints
 
 ### Auth — `/auth`
@@ -151,7 +153,7 @@ Todas as rotas protegidas exigem o header:
 | `POST` | `/auth/signup` | Cadastro de novo usuário | ❌ |
 | `POST` | `/auth/login` | Login com email e senha (JSON) | ❌ |
 | `POST` | `/auth/loginform` | Login via OAuth2 form (usado pelo Swagger) | ❌ |
-| `POST` | `/auth/refresh` | Renova o access token | Refresh Token |
+| `POST` | `/auth/refresh` | Renova o access token (refresh no header Bearer) | Refresh Token |
 | `GET` | `/auth/me` | Retorna os dados do usuário autenticado | Access Token |
 | `POST` | `/auth/forgot-password` | Envia um código de recuperação por e-mail e retorna um `reset_token` | ❌ |
 | `POST` | `/auth/verify-reset-code` | Valida o código de recuperação recebido por e-mail | ❌ |
@@ -161,8 +163,8 @@ Todas as rotas protegidas exigem o header:
 
 | Método | Rota | Descrição | Permissão |
 |---|---|---|---|
-| `GET` | `/cardapio/` | Lista itens disponíveis (filtro opcional por `categoria`) | ❌ |
-| `GET` | `/cardapio/{item_id}` | Detalhes de um item | ❌ |
+| `GET` | `/cardapio/` | Lista itens disponíveis (filtro opcional por `categoria`), incluindo `precos_por_tamanho` quando houver | ❌ |
+| `GET` | `/cardapio/{item_id}` | Detalhes de um item (mesmo formato, com `precos_por_tamanho`) | ❌ |
 | `POST` | `/cardapio/adicionar` | Cria um item do cardápio (com upload de imagem) | Admin |
 | `PATCH` | `/cardapio/editar/{item_id}` | Atualiza nome, preço e/ou disponibilidade de um item | Admin |
 | `DELETE` | `/cardapio/deletar/{item_id}` | Remove um item (e sua imagem) | Admin |
@@ -171,11 +173,13 @@ Todas as rotas protegidas exigem o header:
 
 | Método | Rota | Descrição | Permissão |
 |---|---|---|---|
-| `POST` | `/pedidos/criar_pedido` | Cria um novo pedido (status `PENDENTE`) | Autenticado |
+| `POST` | `/pedidos` | Checkout transacional: cria pedido `PENDENTE` + itens com snapshot (alias: `/pedidos/criar_pedido`) | Autenticado |
 | `GET` | `/pedidos/meus_pedidos` | Lista os pedidos do usuário autenticado | Autenticado |
-| `POST` | `/pedidos/adicionar_item/{pedido_id}` | Adiciona um item do cardápio ao pedido (preço vem do banco) | Dono ou Admin |
+| `POST` | `/pedidos/adicionar_item/{pedido_id}` | Adiciona um item ao pedido; body JSON; preço vem do banco | Dono ou Admin |
 | `DELETE` | `/pedidos/remover_item/{pedido_id}/{item_id}` | Remove um item do pedido | Dono ou Admin |
 | `POST` | `/pedidos/finalizar/{pedido_id}` | Finaliza o pedido (envia para a cozinha) | Dono ou Admin |
+
+Contrato completo do checkout (payload, resposta e erros): [`docs/checkout-api.md`](docs/checkout-api.md).
 
 ## Modelos do Banco
 
@@ -194,10 +198,17 @@ Todas as rotas protegidas exigem o header:
 * `id`: Integer (PK)
 * `nome`: String(120)
 * `descricao`: Text - Nullable
-* `preco`: Float
-* `categoria`: Enum (`Pizza`, `Bebida`, `Sobremesa`, `Lanche`, `Acompanhamento`, `Outros`)
+* `preco`: Float — preço fixo (itens sem tamanho)
+* `categoria`: Enum (`PIZZA`, `BEBIDA`, `SOBREMESA`, `LANCHE`, `ACOMPANHAMENTO`, `OUTROS`) - NOT NULL
 * `disponivel`: Boolean
 * `imagem_url`: String(255) - Nullable
+
+### itens_cardapio_precos_tamanho
+* `id`: Integer (PK)
+* `item_cardapio_id`: FK → itens_cardapio (ON DELETE CASCADE)
+* `tamanho`: String(10) — `pequena`, `media` ou `grande` (CHECK)
+* `preco`: Numeric(10,2) — CHECK `preco > 0`
+* Unique: (`item_cardapio_id`, `tamanho`)
 
 ### pedidos
 * `id`: Integer (PK)

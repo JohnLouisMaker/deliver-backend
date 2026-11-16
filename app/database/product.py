@@ -52,7 +52,7 @@ CATALOGO_PADRAO = [
     {
         "nome": "Pesto e Tomate",
         "descricao": "Massa artesanal, burrata cremosa, pesto de manjericão e tomate confit.",
-        "categoria": CategoriaEnum.ACOMPANHAMENTO,
+        "categoria": CategoriaEnum.PIZZA,
         "preco": 44.0,
         "imagem_url": "/static/uploads/pesto-tomate.jpg",
         "disponivel": True,
@@ -98,3 +98,38 @@ CATALOGO_PADRAO = [
         "disponivel": True,
     },
 ]
+
+# Preços oficiais por sabor e tamanho (dados de exemplo do cardápio padrão).
+# Cada combinação tem preço próprio; não há multiplicador nem preço derivado.
+PRECOS_TAMANHO_PADRAO = {
+    "Marguerita Clássica": {
+        "pequena": "39.90",
+        "media": "54.90",
+        "grande": "69.90",
+    },
+    "Pepperoni Toscana": {
+        "pequena": "45.90",
+        "media": "62.50",
+        "grande": "79.90",
+    },
+    "4 Queijos Cremosa": {
+        "pequena": "42.90",
+        "media": "57.00",
+        "grande": "72.90",
+    },
+    "Frango Barbecue": {
+        "pequena": "44.90",
+        "media": "59.90",
+        "grande": "75.90",
+    },
+    "Veggie Mediterrânea": {
+        "pequena": "38.90",
+        "media": "52.00",
+        "grande": "66.90",
+    },
+    "Trufa Negra": {
+        "pequena": "52.90",
+        "media": "68.00",
+        "grande": "86.90",
+    },
+}
