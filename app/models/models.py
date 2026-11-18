@@ -1,14 +1,13 @@
 import enum
 from datetime import datetime, timezone
+from decimal import Decimal
 
-from app.database.database import Base, engine
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
     Column,
     DateTime,
     Enum,
-    Float,
     ForeignKey,
     Integer,
     Numeric,
@@ -17,6 +16,8 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
+
+from app.database.database import Base, engine
 
 
 # ENUM DE CATEGORIAS
@@ -59,7 +60,7 @@ class ItemCardapio(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     nome = Column(String(120), nullable=False, index=True)
     descricao = Column(Text, nullable=True)
-    preco = Column(Float, nullable=False)
+    preco = Column(Numeric(10, 2), nullable=False)
 
     categoria = Column(
         Enum(
@@ -86,16 +87,11 @@ class ItemCardapio(Base):
         Levanta erro explícito quando a combinação não está configurada, em vez
         de recair em preço padrão ou multiplicador presumido.
         """
-        tamanho_valor = (
-            tamanho.value if isinstance(tamanho, TamanhoEnum) else str(tamanho)
-        )
+        tamanho_valor = tamanho.value if isinstance(tamanho, TamanhoEnum) else str(tamanho)
         for preco_tamanho in self.precos_tamanho:
             if preco_tamanho.tamanho == tamanho_valor:
                 return preco_tamanho.preco
-        raise ValueError(
-            f"Preço não configurado para o item {self.id} no tamanho "
-            f"'{tamanho_valor}'."
-        )
+        raise ValueError(f"Preço não configurado para o item {self.id} no tamanho '{tamanho_valor}'.")
 
 
 # TABELA DE PREÇOS POR TAMANHO (PIZZA = SABOR x TAMANHO)
@@ -164,7 +160,7 @@ class PedidoModel(Base):
         default=StatusEnum.PENDENTE,
     )
 
-    preco = Column(Float, default=0.0, nullable=False)
+    preco = Column(Numeric(10, 2), default=Decimal("0.00"), nullable=False)
 
     # Checkout fields
     endereco_entrega = Column(Text, nullable=True)
@@ -177,7 +173,7 @@ class PedidoModel(Base):
         ),
         nullable=True,
     )
-    troco_para = Column(Float, nullable=True)
+    troco_para = Column(Numeric(10, 2), nullable=True)
     observacao = Column(Text, nullable=True)
     telefone_contato = Column(String(20), nullable=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
@@ -198,7 +194,7 @@ class ItemPedidoModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
 
     nome_snapshot = Column(String(100), nullable=False)
-    preco_unitario = Column(Float, nullable=False)
+    preco_unitario = Column(Numeric(10, 2), nullable=False)
     imagem_url_snapshot = Column(String, nullable=True)
 
     quantidade = Column(Integer, nullable=False)

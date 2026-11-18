@@ -2,10 +2,11 @@ import os
 import shutil
 from uuid import uuid4
 
-from app.dependencies import get_current_user, make_session
-from app.models.models import CategoriaEnum, ItemCardapio, UserModel
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
+
+from app.dependencies import get_current_user, make_session
+from app.models.models import CategoriaEnum, ItemCardapio, UserModel
 
 product_router = APIRouter(prefix="/cardapio", tags=["cardapio"])
 
@@ -38,9 +39,7 @@ def serializar_item_cardapio(item: ItemCardapio) -> dict:
 
 @product_router.get("", include_in_schema=False)
 @product_router.get("/")
-async def listar_cardapio(
-    categoria: CategoriaEnum | None = None, db: Session = Depends(make_session)
-):
+async def listar_cardapio(categoria: CategoriaEnum | None = None, db: Session = Depends(make_session)):
     """Lista itens disponíveis no cardápio com filtro opcional."""
     query = db.query(ItemCardapio).filter(ItemCardapio.disponivel)
     if categoria:
@@ -68,9 +67,7 @@ async def adicionar_item_cardapio(
     current_user: UserModel = Depends(get_current_user),
 ):
     if not current_user.admin:
-        raise HTTPException(
-            status_code=403, detail="Acesso negado: apenas administradores."
-        )
+        raise HTTPException(status_code=403, detail="Acesso negado: apenas administradores.")
 
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     ext = os.path.splitext(imagem.filename)[1]

@@ -1,7 +1,8 @@
 from enum import Enum
 
-from app.models.models import FormaPagamentoEnum, TamanhoEnum
 from pydantic import BaseModel, ConfigDict, Field
+
+from app.models.models import FormaPagamentoEnum, TamanhoEnum
 
 
 # --- USUÁRIO ---

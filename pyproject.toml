@@ -1,0 +1,13 @@
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["venv", ".venv", "node_modules", "__pycache__", ".pytest_cache"]
+
+[tool.ruff.lint]
+select = ["F", "I", "W"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

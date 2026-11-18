@@ -12,9 +12,9 @@ descartar dados.
 
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "5b8c0d2e4f6a"
@@ -52,25 +52,20 @@ def upgrade() -> None:
 
     for item_id, categoria in CATEGORIA_POR_ID.items():
         op.execute(
-            sa.text(
-                "UPDATE itens_cardapio SET categoria = :categoria WHERE id = :id"
-            ).bindparams(categoria=categoria, id=item_id)
+            sa.text("UPDATE itens_cardapio SET categoria = :categoria WHERE id = :id").bindparams(
+                categoria=categoria, id=item_id
+            )
         )
 
-    sem_categoria = bind.execute(
-        sa.text("SELECT count(*) FROM itens_cardapio WHERE categoria IS NULL")
-    ).scalar()
+    sem_categoria = bind.execute(sa.text("SELECT count(*) FROM itens_cardapio WHERE categoria IS NULL")).scalar()
     if sem_categoria:
         raise RuntimeError(
-            "Existem itens do cardápio sem categoria mapeada; migration abortada "
-            f"({sem_categoria} linha(s))."
+            f"Existem itens do cardápio sem categoria mapeada; migration abortada ({sem_categoria} linha(s))."
         )
 
     if bind.dialect.name == "postgresql":
         op.execute(
-            "ALTER TABLE itens_cardapio "
-            "ALTER COLUMN categoria TYPE categoriaenum "
-            "USING categoria::categoriaenum"
+            "ALTER TABLE itens_cardapio ALTER COLUMN categoria TYPE categoriaenum USING categoria::categoriaenum"
         )
         op.execute("ALTER TABLE itens_cardapio ALTER COLUMN categoria SET NOT NULL")
 
@@ -92,11 +87,7 @@ def downgrade() -> None:
         op.drop_index("ix_itens_cardapio_categoria", table_name="itens_cardapio")
 
     if bind.dialect.name == "postgresql":
+        op.execute("ALTER TABLE itens_cardapio ALTER COLUMN categoria DROP NOT NULL")
         op.execute(
-            "ALTER TABLE itens_cardapio ALTER COLUMN categoria DROP NOT NULL"
-        )
-        op.execute(
-            "ALTER TABLE itens_cardapio "
-            "ALTER COLUMN categoria TYPE character varying(120) "
-            "USING categoria::text"
+            "ALTER TABLE itens_cardapio ALTER COLUMN categoria TYPE character varying(120) USING categoria::text"
         )

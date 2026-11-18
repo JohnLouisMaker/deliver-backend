@@ -17,18 +17,18 @@ Backend com autenticação completa (cadastro, login, refresh de token e recuper
 
 ## Tecnologias
 
-| Tecnologia | Uso |
-|---|---|
-| **FastAPI** | Framework web |
-| **SQLAlchemy 2** | ORM e modelagem do banco |
-| **PostgreSQL** | Banco de dados (hospedado no [Supabase](https://supabase.com)) |
-| **Alembic** | Migrações do banco |
-| **python-jose** | Geração e validação de JWT |
-| **passlib[bcrypt]** | Hash de senhas |
-| **fastapi-mail** | Envio de e-mail (recuperação de senha) |
-| **python-dotenv** | Variáveis de ambiente |
-| **psycopg2-binary** | Driver do PostgreSQL |
-| **uvicorn** | Servidor ASGI |
+| Tecnologia          | Uso                                                            |
+| ------------------- | -------------------------------------------------------------- |
+| **FastAPI**         | Framework web                                                  |
+| **SQLAlchemy 2**    | ORM e modelagem do banco                                       |
+| **PostgreSQL**      | Banco de dados (hospedado no [Supabase](https://supabase.com)) |
+| **Alembic**         | Migrações do banco                                             |
+| **python-jose**     | Geração e validação de JWT                                     |
+| **passlib[bcrypt]** | Hash de senhas                                                 |
+| **fastapi-mail**    | Envio de e-mail (recuperação de senha)                         |
+| **python-dotenv**   | Variáveis de ambiente                                          |
+| **psycopg2-binary** | Driver do PostgreSQL                                           |
+| **uvicorn**         | Servidor ASGI                                                  |
 
 ## Estrutura do Projeto
 
@@ -88,7 +88,7 @@ pip install -r requirements.txt
 
 ### 4. Configure as variáveis de ambiente
 
-Crie um arquivo `.env` na raiz do projeto. O banco Postgres deste projeto roda no **Supabase** — pegue a *Connection String* em `Project Settings → Database` (prefira o modo **Transaction Pooler**, porta `6543`, para ambientes serverless/produção):
+Crie um arquivo `.env` na raiz do projeto. O banco Postgres deste projeto roda no **Supabase** — pegue a _Connection String_ em `Project Settings → Database` (prefira o modo **Transaction Pooler**, porta `6543`, para ambientes serverless/produção):
 
 ```env
 # Banco de dados (Supabase)
@@ -108,7 +108,7 @@ EMAIL_PASSWORD=sua_senha_de_app
 EMAIL_FROM=noreply@delivery.com
 ```
 
-> A conexão usa `psycopg2` via SQLAlchemy, então qualquer *connection string* Postgres do Supabase funciona — direta (porta `5432`) ou via pooler (porta `6543`, recomendada quando o app roda em serverless/muitas instâncias).
+> A conexão usa `psycopg2` via SQLAlchemy, então qualquer _connection string_ Postgres do Supabase funciona — direta (porta `5432`) ou via pooler (porta `6543`, recomendada quando o app roda em serverless/muitas instâncias).
 
 ### 5. Execute as migrações
 
@@ -135,9 +135,9 @@ Documentação interativa: `http://127.0.0.1:8000/docs`
 
 A API usa **JWT** com três tipos de token (campo `type` no payload): `access`, `refresh` e `reset` (para redefinição de senha).
 
-* **Access Token**: curta duração, usado nas requisições autenticadas.
-* **Refresh Token**: longa duração, usado para renovar o access token.
-* **Reset Token**: emitido em `/auth/forgot-password`, usado apenas no fluxo de recuperação de senha.
+- **Access Token**: curta duração, usado nas requisições autenticadas.
+- **Refresh Token**: longa duração, usado para renovar o access token.
+- **Reset Token**: emitido em `/auth/forgot-password`, usado apenas no fluxo de recuperação de senha.
 
 Todas as rotas protegidas exigem o header:
 `Authorization: Bearer <access_token>`
@@ -148,84 +148,90 @@ O **refresh token também é enviado no header** `Authorization: Bearer <refresh
 
 ### Auth — `/auth`
 
-| Método | Rota | Descrição | Auth |
-|---|---|---|---|
-| `POST` | `/auth/signup` | Cadastro de novo usuário | ❌ |
-| `POST` | `/auth/login` | Login com email e senha (JSON) | ❌ |
-| `POST` | `/auth/loginform` | Login via OAuth2 form (usado pelo Swagger) | ❌ |
-| `POST` | `/auth/refresh` | Renova o access token (refresh no header Bearer) | Refresh Token |
-| `GET` | `/auth/me` | Retorna os dados do usuário autenticado | Access Token |
-| `POST` | `/auth/forgot-password` | Envia um código de recuperação por e-mail e retorna um `reset_token` | ❌ |
-| `POST` | `/auth/verify-reset-code` | Valida o código de recuperação recebido por e-mail | ❌ |
-| `POST` | `/auth/reset-password` | Define uma nova senha usando o código + `reset_token` | ❌ |
+| Método | Rota                      | Descrição                                                            | Auth          |
+| ------ | ------------------------- | -------------------------------------------------------------------- | ------------- |
+| `POST` | `/auth/signup`            | Cadastro de novo usuário                                             | ❌            |
+| `POST` | `/auth/login`             | Login com email e senha (JSON)                                       | ❌            |
+| `POST` | `/auth/loginform`         | Login via OAuth2 form (usado pelo Swagger)                           | ❌            |
+| `POST` | `/auth/refresh`           | Renova o access token (refresh no header Bearer)                     | Refresh Token |
+| `GET`  | `/auth/me`                | Retorna os dados do usuário autenticado                              | Access Token  |
+| `POST` | `/auth/forgot-password`   | Envia um código de recuperação por e-mail e retorna um `reset_token` | ❌            |
+| `POST` | `/auth/verify-reset-code` | Valida o código de recuperação recebido por e-mail                   | ❌            |
+| `POST` | `/auth/reset-password`    | Define uma nova senha usando o código + `reset_token`                | ❌            |
 
 ### Cardápio — `/cardapio`
 
-| Método | Rota | Descrição | Permissão |
-|---|---|---|---|
-| `GET` | `/cardapio/` | Lista itens disponíveis (filtro opcional por `categoria`), incluindo `precos_por_tamanho` quando houver | ❌ |
-| `GET` | `/cardapio/{item_id}` | Detalhes de um item (mesmo formato, com `precos_por_tamanho`) | ❌ |
-| `POST` | `/cardapio/adicionar` | Cria um item do cardápio (com upload de imagem) | Admin |
-| `PATCH` | `/cardapio/editar/{item_id}` | Atualiza nome, preço e/ou disponibilidade de um item | Admin |
-| `DELETE` | `/cardapio/deletar/{item_id}` | Remove um item (e sua imagem) | Admin |
+| Método   | Rota                          | Descrição                                                                                               | Permissão |
+| -------- | ----------------------------- | ------------------------------------------------------------------------------------------------------- | --------- |
+| `GET`    | `/cardapio/`                  | Lista itens disponíveis (filtro opcional por `categoria`), incluindo `precos_por_tamanho` quando houver | ❌        |
+| `GET`    | `/cardapio/{item_id}`         | Detalhes de um item (mesmo formato, com `precos_por_tamanho`)                                           | ❌        |
+| `POST`   | `/cardapio/adicionar`         | Cria um item do cardápio (com upload de imagem)                                                         | Admin     |
+| `PATCH`  | `/cardapio/editar/{item_id}`  | Atualiza nome, preço e/ou disponibilidade de um item                                                    | Admin     |
+| `DELETE` | `/cardapio/deletar/{item_id}` | Remove um item (e sua imagem)                                                                           | Admin     |
 
 ### Pedidos — `/pedidos`
 
-| Método | Rota | Descrição | Permissão |
-|---|---|---|---|
-| `POST` | `/pedidos` | Checkout transacional: cria pedido `PENDENTE` + itens com snapshot (alias: `/pedidos/criar_pedido`) | Autenticado |
-| `GET` | `/pedidos/meus_pedidos` | Lista os pedidos do usuário autenticado | Autenticado |
-| `POST` | `/pedidos/adicionar_item/{pedido_id}` | Adiciona um item ao pedido; body JSON; preço vem do banco | Dono ou Admin |
-| `DELETE` | `/pedidos/remover_item/{pedido_id}/{item_id}` | Remove um item do pedido | Dono ou Admin |
-| `POST` | `/pedidos/finalizar/{pedido_id}` | Finaliza o pedido (envia para a cozinha) | Dono ou Admin |
+| Método   | Rota                                          | Descrição                                                                                           | Permissão     |
+| -------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------- |
+| `POST`   | `/pedidos`                                    | Checkout transacional: cria pedido `PENDENTE` + itens com snapshot (alias: `/pedidos/criar_pedido`) | Autenticado   |
+| `GET`    | `/pedidos/meus_pedidos`                       | Lista os pedidos do usuário autenticado                                                             | Autenticado   |
+| `POST`   | `/pedidos/adicionar_item/{pedido_id}`         | Adiciona um item ao pedido; body JSON; preço vem do banco                                           | Dono ou Admin |
+| `DELETE` | `/pedidos/remover_item/{pedido_id}/{item_id}` | Remove um item do pedido                                                                            | Dono ou Admin |
+| `POST`   | `/pedidos/finalizar/{pedido_id}`              | Finaliza o pedido (envia para a cozinha)                                                            | Dono ou Admin |
 
 Contrato completo do checkout (payload, resposta e erros): [`docs/checkout-api.md`](docs/checkout-api.md).
 
 ## Modelos do Banco
 
 ### usuario
-* `id`: Integer (PK)
-* `nome`: String(100)
-* `email`: String(150) - Unique
-* `senha`: String(250) — hash bcrypt
-* `ativo`: Boolean
-* `admin`: Boolean
-* `reset_code_hash`: String(64) - Nullable — hash SHA-256 do código de recuperação
-* `reset_code_expires_at`: DateTime - Nullable
-* `reset_code_attempts`: Integer
+
+- `id`: Integer (PK)
+- `nome`: String(100)
+- `email`: String(150) - Unique
+- `senha`: String(250) — hash bcrypt
+- `ativo`: Boolean
+- `admin`: Boolean
+- `reset_code_hash`: String(64) - Nullable — hash SHA-256 do código de recuperação
+- `reset_code_expires_at`: DateTime - Nullable
+- `reset_code_attempts`: Integer
 
 ### itens_cardapio
-* `id`: Integer (PK)
-* `nome`: String(120)
-* `descricao`: Text - Nullable
-* `preco`: Float — preço fixo (itens sem tamanho)
-* `categoria`: Enum (`PIZZA`, `BEBIDA`, `SOBREMESA`, `LANCHE`, `ACOMPANHAMENTO`, `OUTROS`) - NOT NULL
-* `disponivel`: Boolean
-* `imagem_url`: String(255) - Nullable
+
+- `id`: Integer (PK)
+- `nome`: String(120)
+- `descricao`: Text - Nullable
+- `preco`: Numeric(10,2) — preço fixo (itens sem tamanho)
+- `categoria`: Enum (`PIZZA`, `BEBIDA`, `SOBREMESA`, `LANCHE`, `ACOMPANHAMENTO`, `OUTROS`) - NOT NULL
+- `disponivel`: Boolean
+- `imagem_url`: String(255) - Nullable
 
 ### itens_cardapio_precos_tamanho
-* `id`: Integer (PK)
-* `item_cardapio_id`: FK → itens_cardapio (ON DELETE CASCADE)
-* `tamanho`: String(10) — `pequena`, `media` ou `grande` (CHECK)
-* `preco`: Numeric(10,2) — CHECK `preco > 0`
-* Unique: (`item_cardapio_id`, `tamanho`)
+
+- `id`: Integer (PK)
+- `item_cardapio_id`: FK → itens_cardapio (ON DELETE CASCADE)
+- `tamanho`: String(10) — `pequena`, `media` ou `grande` (CHECK)
+- `preco`: Numeric(10,2) — CHECK `preco > 0`
+- Unique: (`item_cardapio_id`, `tamanho`)
 
 ### pedidos
-* `id`: Integer (PK)
-* `usuario_id`: FK → usuario
-* `status`: Enum (`Pendente`, `Finalizado`, `Cancelado`)
-* `preco`: Float (Valor total, calculado a partir dos itens)
+
+- `id`: Integer (PK)
+- `usuario_id`: FK → usuario
+- `status`: Enum (`Pendente`, `Finalizado`, `Cancelado`)
+- `preco`: Numeric(10,2) (valor total, calculado a partir dos itens)
+- `troco_para`: Numeric(10,2) - Nullable
 
 ### itens_pedidos
-* `id`: Integer (PK)
-* `pedido_id`: FK → pedidos
-* `item_cardapio_id`: FK → itens_cardapio - Nullable
-* `nome_snapshot`: String(100) — nome do item no momento do pedido
-* `imagem_url_snapshot`: String - Nullable
-* `sabor`: String(100) - Nullable
-* `tamanho`: String(100) - Nullable
-* `quantidade`: Integer
-* `preco_unitario`: Float — copiado do cardápio, nunca enviado pelo cliente
+
+- `id`: Integer (PK)
+- `pedido_id`: FK → pedidos
+- `item_cardapio_id`: FK → itens_cardapio - Nullable
+- `nome_snapshot`: String(100) — nome do item no momento do pedido
+- `imagem_url_snapshot`: String - Nullable
+- `sabor`: String(100) - Nullable
+- `tamanho`: String(100) - Nullable
+- `quantidade`: Integer
+- `preco_unitario`: Numeric(10,2) — copiado do cardápio, nunca enviado pelo cliente
 
 ## Migrações com Alembic
 

@@ -3,6 +3,12 @@ import logging
 import random
 from datetime import datetime, timedelta, timezone
 
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+from jose import jwt
+from sqlalchemy.orm import Session
+
 from app.core.config import (
     ACCESS_TOKEN_EXPIRE,
     ALGORITHM,
@@ -25,11 +31,6 @@ from app.schemas.schemas import (
     VerifyResetCodeSchema,
 )
 from app.security import bcrypt_context
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
-from jose import jwt
-from sqlalchemy.orm import Session
 
 mail_config = ConnectionConfig(
     MAIL_USERNAME=EMAIL_USER,
