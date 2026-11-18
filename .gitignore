@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# --- Dependências JavaScript ---
+node_modules/
+
 # --- Python ---
 __pycache__/
 *.py[cod]
