@@ -20,7 +20,7 @@ from app.models.models import Base
 # access to the values within the .ini file in use.
 config = context.config
 
-db_url = (os.getenv("DATABASE_URL") or "").strip()
+db_url = (os.getenv("DATABASE_URL_MIGRATIONS") or os.getenv("DATABASE_URL") or "").strip()
 if not db_url:
     # Fallback apenas para o valor do alembic.ini (intencionalmente vazio no repo).
     db_url = (config.get_main_option("sqlalchemy.url") or "").strip()

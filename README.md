@@ -64,6 +64,8 @@ Crie um `.env` na raiz:
 
 ```env
 DATABASE_URL=postgresql://usuario:senha@host:5432/postgres
+# Opcional: conexão direta (porta 5432) usada apenas pelas migrations
+# DATABASE_URL_MIGRATIONS=postgresql://usuario:senha@host:5432/postgres
 SECRET_KEY=troque-esta-chave
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE=30           # minutos
