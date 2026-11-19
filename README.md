@@ -132,6 +132,17 @@ e roda `pytest`. Dispara em push para `main`, `feat/**`, `fix/**`,
 
 ## Endpoints
 
+### Infra — `/health`
+
+| Método | Rota      | Descrição                                     | Auth |
+| ------ | --------- | --------------------------------------------- | ---- |
+| `GET`  | `/health` | Status da API e conectividade com o banco     | —    |
+
+Responde `200` com `{"status": "ok", "database": "ok"}` quando o banco
+responde a um `SELECT 1`; caso contrário responde `503` com
+`{"status": "error", "database": "unavailable"}`. Usado como healthcheck
+no Railway/Docker.
+
 ### Auth — `/auth`
 
 | Método | Rota                      | Descrição                                                     | Auth          |
