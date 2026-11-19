@@ -28,7 +28,4 @@
 - Docs: `http://127.0.0.1:8000/docs`
 
 ## Atenção
-- `requirements.txt` está em UTF-16
-- Dockerfile com path errado (`main:app` → deve ser `app.main:app`)
-- Engine/Base duplicados em `database.py` e `models.py`
 - Ver detalhes em `docs/` ou no README
