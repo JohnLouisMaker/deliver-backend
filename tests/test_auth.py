@@ -1,7 +1,8 @@
 from uuid import uuid4
 
-from app.main import app
 from fastapi.testclient import TestClient
+
+from app.main import app
 
 client = TestClient(app)
 
@@ -11,14 +12,10 @@ def _criar_usuario_qa():
     senha = "Senha@123"
     nome = "QA Tester"
 
-    resposta_cadastro = client.post(
-        "/auth/signup", json={"nome": nome, "email": email, "senha": senha}
-    )
+    resposta_cadastro = client.post("/auth/signup", json={"nome": nome, "email": email, "senha": senha})
     assert resposta_cadastro.status_code == 200
 
-    resposta_login = client.post(
-        "/auth/login", json={"email": email, "senha": senha}
-    )
+    resposta_login = client.post("/auth/login", json={"email": email, "senha": senha})
     assert resposta_login.status_code == 200
 
     return {
@@ -35,9 +32,7 @@ def _auth_headers(token: str):
 
 
 def test_forgot_password_email_nao_encontrado():
-    response = client.post(
-        "/auth/forgot-password", json={"email": "naoexiste@email.com"}
-    )
+    response = client.post("/auth/forgot-password", json={"email": "naoexiste@email.com"})
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Email informado não está cadastrado"
@@ -143,9 +138,7 @@ def test_patch_me_email_duplicado():
     assert response.status_code == 400
     assert response.json()["detail"] == "Este e-mail já está cadastrado."
 
-    dados_usuario = client.get(
-        "/auth/me", headers=_auth_headers(usuario["token"])
-    )
+    dados_usuario = client.get("/auth/me", headers=_auth_headers(usuario["token"]))
     assert dados_usuario.status_code == 200
     assert dados_usuario.json()["email"] == usuario["email"]
 

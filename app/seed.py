@@ -19,9 +19,7 @@ def _semear_precos_tamanho(db) -> int:
             print(f"Item '{nome}' não encontrado - preços de tamanho ignorados.")
             continue
 
-        ja_configurados = {
-            preco_tamanho.tamanho for preco_tamanho in item.precos_tamanho
-        }
+        ja_configurados = {preco_tamanho.tamanho for preco_tamanho in item.precos_tamanho}
         for tamanho, valor in precos.items():
             if tamanho in ja_configurados:
                 continue
